@@ -1,13 +1,17 @@
 var expect = require('chai').expect;
 var mongoose = require('mongoose');
+var Mockgoose = require('mockgoose').Mockgoose;
+new Mockgoose(mongoose);
 require('../');
-
-require('mockgoose')(mongoose);
 
 mongoose.Promise = Promise;
 
 var UserSimple = mongoose.model('UserSimple', new mongoose.Schema({
 	email: mongoose.SchemaTypes.Email
+}));
+
+var UserCustomMessage = mongoose.model('UserCustomMessage', new mongoose.Schema({
+	email: { type: mongoose.SchemaTypes.Email, required: true, invalid: 'User invalid email address' }
 }));
 
 var UserAllowBlank = mongoose.model('UserAllowBlank', new mongoose.Schema({
@@ -46,6 +50,15 @@ describe('mongoose-type-email', function(){
 		user.email = '';
 		user.validate(function(err){
 			expect(err.errors.email.message).to.equal('invalid email address');
+			done();
+		});
+	});
+
+	it('should use custom invalid message', function(done) {
+		var user =  new UserCustomMessage();
+		user.email = 'invalid.email@';
+		user.validate(function(err){
+			expect(err.errors.email.message).to.equal('User invalid email address');
 			done();
 		});
 	});
